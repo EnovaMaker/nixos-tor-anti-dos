@@ -16,15 +16,18 @@ That generates an `inet tor-antidos` nftables table with one dynamic set per add
 
 ## Why this exists
 
-**This is not a second tool competing with a working one. It picks up a job that no longer has
-anyone doing it.**
+**This is not a second tool competing with a working one. It picks up a job that operators still
+need and that nobody is doing any more.**
 
-`Enkidu-6/tor-ddos` (77★) gave relay operators iptables rules for this same problem. On 2 May 2026
-its author wrote to the `tor-relays` list to say they were shutting it down, along with
-`Enkidu-6/tor-relay-lists`, and that no one had offered to take either over. No one has since. The
-repositories are still up; the services that fed them have been down since. None of the nine forks
-of `tor-ddos` has a single star, and the three tools that followed — `orport-guard`, `Cerberus`
-and `EndGameV3` — are in the same position.
+The demand is not hypothetical. `Enkidu-6/tor-ddos` — iptables rules for exactly this problem —
+has **77 stars and 9 forks**. Relay operators were using it.
+
+On 2 May 2026 its author wrote to the `tor-relays` list to say they were shutting it down, along
+with `Enkidu-6/tor-relay-lists`, and that nobody had offered to take either over. Nobody has since.
+Both repositories are still up and unarchived, but `tor-ddos` has not been touched since December
+2024, and the services that fed the relay lists went down in May. **Not one of the forks has a
+single star** — forking preserved the files and continued nothing. The three tools that followed,
+`orport-guard`, `Cerberus` and `EndGameV3`, are in the same position.
 
 The obvious answer would have been to adopt it rather than write anything new. **That route is
 closed: none of those repositories declares a licence**, which leaves them all-rights-reserved.
