@@ -33,6 +33,26 @@ The obvious answer would have been to adopt it rather than write anything new. *
 closed: none of those repositories declares a licence**, which leaves them all-rights-reserved.
 However willing anyone is, they cannot legally be forked, continued or maintained.
 
+### What its open issues are still asking for
+
+`tor-ddos` has three open issues. **All three have no replies at all.**
+
+| | Opened | |
+|---|---|---|
+| [#101](https://github.com/Enkidu-6/tor-ddos/issues/101) | Oct 2025 | Someone wrote a corrected `refresh-authorities.sh` and pasted the whole thing into the issue. Never merged |
+| [#102](https://github.com/Enkidu-6/tor-ddos/issues/102) | May 2026 | A relay operator offered to take the project over and asked how the lists were generated. Never answered |
+| [#103](https://github.com/Enkidu-6/tor-ddos/issues/103) | Jul 2026 | *"With the authorities no longer being updated (…) this system is very broken. Please mark this repository as deprecated and put warnings on it."* Still not marked |
+
+**#101 and #102 are precisely what a licence is for.** A working fix was offered, and a maintainer
+volunteered. Neither could be taken up, and both are still sitting there.
+
+The breakage they describe is structural. `tor-ddos` downloads relay and authority lists at runtime
+from a repository that stopped publishing them, so it degrades in the field on every host still
+running it, silently. **This module fetches nothing at runtime and keeps no lists** — the limit is
+enforced per source address in the kernel, from rules evaluated when the system is built. That
+failure mode does not exist here, and the licence means the next `#101` can actually be merged and
+the next `#102` can actually be said yes to.
+
 So the capability continues here and the code does not. Same job — keeping a flood of new
 connections from taking a relay off the network — reimplemented from public documentation,
 declarative instead of a script to paste, covered by a VM test in CI, and carrying a licence from
