@@ -181,6 +181,14 @@ for why that mattered.
 **never run on a real relay**, and the defaults are a defensible starting point rather than a
 measured one.
 
+🔴 **Independent project. Not affiliated with, endorsed by, or part of the Tor Project.** It has
+not been submitted anywhere yet — not to the Tor Project, not to nixpkgs. Nothing here has been
+reviewed by anyone but its author.
+
+This matters more than the usual disclaimer, because the module writes firewall rules on a machine
+that other people depend on to reach the network. Anyone deciding whether to run it should know
+they are trusting one author and a VM test, not the Tor Project.
+
 ## Licence
 
 MIT — see [`LICENSE`](LICENSE).
