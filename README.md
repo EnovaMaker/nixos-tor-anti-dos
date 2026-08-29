@@ -16,20 +16,24 @@ That generates an `inet tor-antidos` nftables table with one dynamic set per add
 
 ## Why this exists
 
+**This is not a second tool competing with a working one. It picks up a job that no longer has
+anyone doing it.**
+
 `Enkidu-6/tor-ddos` (77★) gave relay operators iptables rules for this same problem. On 2 May 2026
 its author wrote to the `tor-relays` list to say they were shutting it down, along with
 `Enkidu-6/tor-relay-lists`, and that no one had offered to take either over. No one has since. The
 repositories are still up; the services that fed them have been down since. None of the nine forks
-of `tor-ddos` has a single star.
+of `tor-ddos` has a single star, and the three tools that followed — `orport-guard`, `Cerberus`
+and `EndGameV3` — are in the same position.
 
-**Neither repository declares a licence**, which leaves them all-rights-reserved. However willing
-anyone is, they cannot legally be forked or continued — and the same is true of the three tools
-that followed, `orport-guard`, `Cerberus` and `EndGameV3`.
+The obvious answer would have been to adopt it rather than write anything new. **That route is
+closed: none of those repositories declares a licence**, which leaves them all-rights-reserved.
+However willing anyone is, they cannot legally be forked, continued or maintained.
 
-So this is not a fork and not a continuation of anyone's work. It is a separate implementation of
-the same idea, aiming to give relay operators a maintained option again: written from public
-documentation, declarative rather than a script to paste, tested in CI, and carrying a licence from
-its first line — so that if it ever needs to change hands, it can.
+So the capability continues here and the code does not. Same job — keeping a flood of new
+connections from taking a relay off the network — reimplemented from public documentation,
+declarative instead of a script to paste, covered by a VM test in CI, and carrying a licence from
+its first line, so that this one can change hands if it ever needs to.
 
 ---
 
