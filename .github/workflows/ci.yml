@@ -4,12 +4,6 @@ on:
   push:
     branches: [ main ]
   pull_request:
-  # Also run when nothing changed. This test measures a rate limit against a
-  # token bucket refilling in real time, which is precisely the shape of test
-  # that passes on a fast runner and fails on a slow one. Running it daily
-  # finds that before someone else does.
-  schedule:
-    - cron: "0 5 * * *"
 
 jobs:
   check:

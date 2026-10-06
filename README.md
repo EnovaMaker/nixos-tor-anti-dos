@@ -1,6 +1,6 @@
 # nixos-tor-anti-dos
 
-**Per-source rate limiting for a Tor relay's ORPort, declared once and tested in a VM.**
+**Prototype: per-source rate limiting for a Tor relay's ORPort, declared once. A two-node VM test exists.**
 
 ```nix
 services.tor.antiDoS = {
@@ -55,7 +55,7 @@ the next `#102` can actually be said yes to.
 
 So the capability continues here and the code does not. Same job — keeping a flood of new
 connections from taking a relay off the network — reimplemented from public documentation,
-declarative instead of a script to paste, covered by a VM test in CI, and carrying a licence from
+declarative instead of a script to paste, with a two-node VM test, and carrying a licence from
 its first line, so that this one can change hands if it ever needs to.
 
 ---
