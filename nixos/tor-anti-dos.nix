@@ -262,7 +262,7 @@ in
       '';
       baseUrl = lib.mkOption {
         type = lib.types.str;
-        default = "https://enovamaker.github.io/tor-relay-lists/";
+        default = "https://raw.githubusercontent.com/EnovaMaker/tor-relay-lists/main/";
         description = "Directory serving authorities-v4.txt, 2-or.txt, above2-or.txt and their -v6 counterparts.";
       };
       interval = lib.mkOption {
