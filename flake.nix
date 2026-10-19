@@ -17,6 +17,8 @@
 
       checks.${system} = {
         antidos = import ./tests/antidos.nix { inherit pkgs; module = self.nixosModules.default; };
+        connections = import ./tests/connections.nix { inherit pkgs; module = self.nixosModules.default; };
+        lists = import ./tests/lists.nix { inherit pkgs; module = self.nixosModules.default; };
       };
     };
 }

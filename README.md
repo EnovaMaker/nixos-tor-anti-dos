@@ -92,6 +92,33 @@ is not a side effect a sub-option should have; there is an assertion saying so.
 
 ---
 
+## Two ways to limit, because relay operators already know both
+
+```nix
+services.tor.antiDoS = {
+  enable = true;
+  orPorts = [ 9001 ];
+  mode = "connections";   # "rate" (default), "connections" or "both"
+};
+```
+
+| `mode` | What it limits |
+|---|---|
+| `rate` | How fast one address may open **new** connections (the original behaviour of this module) |
+| `connections` | How many connections one address may hold **open at once**: 1 for an ordinary address, 2 for relays running two instances, 4 for three or more. Above the limit the connection is dropped; an address that keeps asking is **blocked for 12 hours**, and what it already had open gets a TCP reset. Directory authorities are never limited |
+| `both` | The two together |
+
+This is the model of the stopped `tor-ddos` scripts, for NixOS: the same limits, the same 12-hour
+block, the same exemption for authorities, in an nftables table instead of `iptables` + `ipset`.
+Optional extras: `connections.allowedAddresses`, `twoInstanceAddresses`, `manyInstanceAddresses`,
+`kernelTuning.enable` (the sysctl settings that project recommended), and `lists.enable`, which
+refreshes the authority and multi-instance sets from [`tor-relay-lists`](https://github.com/EnovaMaker/tor-relay-lists)
+(a failed or too-short download leaves the sets as they were).
+
+⚠️ **One difference from those scripts, on purpose.** An address that is refused is counted, and it
+is *repeated* refusals that trigger the block — not "a third open connection", which a source held
+to one connection can never reach.
+
 ## The known limitation: shared NAT
 
 **A per-address limit treats an entire CGNAT pool as one client.**
@@ -119,7 +146,9 @@ users the relay exists to serve — and from their side that is indistinguishabl
 
 ```
 nix flake check
-nix build .#checks.x86_64-linux.antidos -L
+nix build .#checks.x86_64-linux.antidos -L        # mode = "rate"
+nix build .#checks.x86_64-linux.connections -L    # mode = "connections", three clients
+nix build .#checks.x86_64-linux.lists -L          # list refresher and kernel tuning
 ```
 
 Two nodes, because the module exempts loopback: a test that connected over `lo` would pass without
@@ -170,8 +199,9 @@ is the evidence, not the fact that it passed.
 ## Provenance
 
 Written from the Tor Project's public relay-operator documentation, the Tor manual, and `man 8
-nft`. **No code was read from any existing anti-DoS tool** — see [Why this exists](#why-this-exists)
-for why that mattered.
+nft`. For `mode = "connections"` the behaviour follows the public README of the stopped `tor-ddos`
+project (documentation only). **No script or rule from any existing anti-DoS tool was read** — see
+[Why this exists](#why-this-exists) for why that mattered.
 
 ---
 
