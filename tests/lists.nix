@@ -15,6 +15,7 @@ pkgs.testers.runNixOSTest {
       enable = true;
       mode = "connections";
       orPorts = [ 19001 ];
+      connections.allowedAddresses = [ "192.0.2.77" ];
       kernelTuning.enable = true;
       lists = {
         enable = true;
@@ -42,6 +43,11 @@ pkgs.testers.runNixOSTest {
         assert "2001:db8::4" in relay.succeed("nft list set inet tor-antidos allow-v6")
         assert "10.2.0.1" in relay.succeed("nft list set inet tor-antidos two-v4")
         assert "10.3.0.1" in relay.succeed("nft list set inet tor-antidos many-v4")
+
+    with subtest("addresses from the configuration and the Snowflake servers survive a refresh"):
+        s4 = relay.succeed("nft list set inet tor-antidos allow-v4")
+        assert "192.0.2.77" in s4 and "193.187.88.46" in s4 and "141.212.118.18" in s4, s4
+        assert "2a0c:dd40:1:b::46" in relay.succeed("nft list set inet tor-antidos allow-v6")
 
     with subtest("a list that is too short leaves the set as it was"):
         publish("authorities-v4", "10.9.9.9\n")

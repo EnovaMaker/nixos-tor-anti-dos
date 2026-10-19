@@ -39,7 +39,19 @@ let
     "2610:1c0:0:5::131" "2620:13:4000:6000::1000:118" "2a02:16a8:662:2203::1" "2a09:61c0::1337"
   ];
 
-  allowAll = c.allowedAddresses ++ lib.optionals c.includeAuthorities (authoritiesV4 ++ authoritiesV6);
+  # Snowflake servers (snowflake-01 outbound addresses and snowflake-02): Tor Project
+  # issue snowflake#40223 and the DNS names of snowflake-01/-02.torproject.net, 2026-10-19.
+  snowflakeV4 = [
+    "141.212.118.18" "193.187.88.42" "193.187.88.43" "193.187.88.44" "193.187.88.45" "193.187.88.46"
+  ];
+  snowflakeV6 = [
+    "2a0c:dd40:1:b::42" "2a0c:dd40:1:b::43" "2a0c:dd40:1:b::44" "2a0c:dd40:1:b::45"
+    "2a0c:dd40:1:b::46" "2607:f018:600:8:be30:5bff:fef1:c6fa"
+  ];
+
+  # Never touched by the list refresher, which only replaces the authorities.
+  allowStatic = c.allowedAddresses ++ lib.optionals c.includeSnowflake (snowflakeV4 ++ snowflakeV6);
+  allowAll = allowStatic ++ lib.optionals c.includeAuthorities (authoritiesV4 ++ authoritiesV6);
 
   # Address sets that can be filled from the config and, with `lists.enable`,
   # refreshed at runtime. Interval sets, so prefixes work too.
@@ -241,6 +253,11 @@ in
         default = true;
         description = "Also exempt the Tor directory authorities (a snapshot of the consensus of 2026-10-19; see {option}`lists.enable` to keep it current).";
       };
+      includeSnowflake = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Also exempt the Snowflake servers, which open many connections to relays. Addresses from the Tor Project (snowflake issue 40223, DNS of 2026-10-19); override with {option}`allowedAddresses` if they change.";
+      };
       twoInstanceAddresses = lib.mkOption {
         type = lib.types.listOf lib.types.str;
         default = [ ];
@@ -398,18 +415,20 @@ in
       };
       script = ''
         base=${lib.escapeShellArg cfg.lists.baseUrl}
-        refresh() { # file set-name family
+        refresh() { # file set-name family minimum static-addresses
           body=$(curl -fsS --max-time 60 "$base$1.txt") || { echo "fetch of $1 failed; set $2 left as it was"; return 0; }
           addrs=$(printf '%s\n' "$body" | grep -E '^[0-9a-fA-F.:/]+$' || true)
           # A short or empty list would silently remove protection: refuse it.
           [ "$(printf '%s\n' "$addrs" | grep -c .)" -ge "$4" ] || { echo "$1 has too few entries; set $2 left as it was"; return 0; }
+          # Addresses set in the configuration stay in the set.
+          addrs=$(printf '%s\n%s\n' "$addrs" "$5" | tr ',' '\n' | grep . | sort -u)
           {
             echo "flush set inet tor-antidos $2"
             echo "add element inet tor-antidos $2 { $(printf '%s\n' "$addrs" | paste -sd, -) }"
           } | nft -f -
         }
-        refresh authorities-v4 allow-v4 v4 5
-        refresh authorities-v6 allow-v6 v6 4
+        refresh authorities-v4 allow-v4 v4 5 ${lib.escapeShellArg (lib.concatStringsSep "," (v4Of allowStatic))}
+        refresh authorities-v6 allow-v6 v6 4 ${lib.escapeShellArg (lib.concatStringsSep "," (v6Of allowStatic))}
         refresh 2-or two-v4 v4 1
         refresh 2-or-v6 two-v6 v6 1
         refresh above2-or many-v4 v4 1

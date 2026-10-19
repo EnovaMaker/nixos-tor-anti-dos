@@ -105,7 +105,7 @@ services.tor.antiDoS = {
 | `mode` | What it limits |
 |---|---|
 | `rate` | How fast one address may open **new** connections (the original behaviour of this module) |
-| `connections` | How many connections one address may hold **open at once**: 1 for an ordinary address, 2 for relays running two instances, 4 for three or more. Above the limit the connection is dropped; an address that keeps asking is **blocked for 12 hours**, and what it already had open gets a TCP reset. Directory authorities are never limited |
+| `connections` | How many connections one address may hold **open at once**: 1 for an ordinary address, 2 for relays running two instances, 4 for three or more. Above the limit the connection is dropped; an address that keeps asking is **blocked for 12 hours**, and what it already had open gets a TCP reset. Directory authorities and the Snowflake servers are never limited (`includeSnowflake`); addresses you set in `allowedAddresses` survive a list refresh |
 | `both` | The two together |
 
 This is the model of the stopped `tor-ddos` scripts, for NixOS: the same limits, the same 12-hour
