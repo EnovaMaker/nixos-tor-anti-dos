@@ -113,7 +113,11 @@ block, the same exemption for authorities, in an nftables table instead of `ipta
 Optional extras: `connections.allowedAddresses`, `twoInstanceAddresses`, `manyInstanceAddresses`,
 `kernelTuning.enable` (the sysctl settings that project recommended), and `lists.enable`, which
 refreshes the authority and multi-instance sets from [`tor-relay-lists`](https://github.com/EnovaMaker/tor-relay-lists)
-(a failed or too-short download leaves the sets as they were).
+(a failed or too-short download leaves the sets as they were). Every refresh also logs how old each
+list says it is, read from the list's own `Updated:` line, and warns when it is older than
+`lists.warnAfterHours` (default 6): `journalctl -u tor-antidos-lists -o cat`. The lists are published
+on a best-effort schedule (see the `tor-relay-lists` README for the interval observed), so this is how
+you can tell, on your own relay, how long ago they were built from the consensus.
 
 ⚠️ **One difference from those scripts, on purpose.** An address that is refused is counted, and it
 is *repeated* refusals that trigger the block — not "a third open connection", which a source held
