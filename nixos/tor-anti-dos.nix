@@ -287,6 +287,16 @@ in
         default = "30min";
         description = "How often to refresh, in systemd time syntax.";
       };
+      warnAfterHours = lib.mkOption {
+        type = lib.types.ints.positive;
+        default = 6;
+        description = ''
+          Log a warning when a downloaded list says it was built more than this
+          many hours ago. Every refresh logs how old each list says it is, whatever
+          this is set to: the age comes from the list's own `Updated:` line, so the
+          journal always shows when the lists last changed.
+        '';
+      };
     };
 
     kernelTuning.enable = lib.mkEnableOption ''
@@ -415,8 +425,26 @@ in
       };
       script = ''
         base=${lib.escapeShellArg cfg.lists.baseUrl}
+        age() { # file stamp: log how old the list says it is, from its own Updated line
+          # The line is checked before `date` reads it: `date -d x` takes a bare
+          # letter for a time zone and would invent an age.
+          if printf '%s\n' "$2" | grep -Eq '^[A-Z][a-z]{2} [A-Z][a-z]{2} [0-9]{2} [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2} UTC$' \
+            && built=$(LC_ALL=C date -u -d "$2" +%s 2>/dev/null); then
+            mins=$(( ( $(date -u +%s) - built ) / 60 ))
+            [ "$mins" -ge 0 ] || mins=0
+            msg="$1: Updated $2, $((mins / 60)) h $((mins % 60)) min ago"
+            if [ "$mins" -gt $(( ${toString cfg.lists.warnAfterHours} * 60 )) ]; then
+              echo "<4>$msg, older than ${toString cfg.lists.warnAfterHours} h"
+            else
+              echo "$msg"
+            fi
+          else
+            echo "<4>$1: no readable Updated line, cannot tell how old the list is"
+          fi
+        }
         refresh() { # file set-name family minimum static-addresses
           body=$(curl -fsS --max-time 60 "$base$1.txt") || { echo "fetch of $1 failed; set $2 left as it was"; return 0; }
+          age "$1" "$(printf '%s\n' "$body" | head -n 2 | tail -n 1)"
           addrs=$(printf '%s\n' "$body" | grep -E '^[0-9a-fA-F.:/]+$' || true)
           # A short or empty list would silently remove protection: refuse it.
           [ "$(printf '%s\n' "$addrs" | grep -c .)" -ge "$4" ] || { echo "$1 has too few entries; set $2 left as it was"; return 0; }

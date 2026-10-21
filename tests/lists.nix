@@ -27,8 +27,11 @@ pkgs.testers.runNixOSTest {
   testScript = ''
     relay.wait_for_unit("nftables.service")
 
-    def publish(name, lines):
-        relay.succeed(f"mkdir -p /run/relay-lists && printf 'Updated:\nx\n----\n{lines}' > /run/relay-lists/{name}.txt")
+    def stamp(ago):
+        return relay.succeed(f"date -u -d '{ago}' '+%a %b %d %Y %H:%M:%S UTC'").strip()
+
+    def publish(name, lines, when="1 hour ago"):
+        relay.succeed(f"mkdir -p /run/relay-lists && printf 'Updated:\n{stamp(when)}\n----\n{lines}' > /run/relay-lists/{name}.txt")
 
     publish("authorities-v4", "10.1.0.1\n10.1.0.2\n10.1.0.3\n10.1.0.4\n10.1.0.5\n10.1.0.6\n")
     publish("authorities-v6", "2001:db8::1\n2001:db8::2\n2001:db8::3\n2001:db8::4\n")
@@ -48,6 +51,23 @@ pkgs.testers.runNixOSTest {
         s4 = relay.succeed("nft list set inet tor-antidos allow-v4")
         assert "192.0.2.77" in s4 and "193.187.88.46" in s4 and "141.212.118.18" in s4, s4
         assert "2a0c:dd40:1:b::46" in relay.succeed("nft list set inet tor-antidos allow-v6")
+
+    with subtest("each refresh logs how old a list says it is"):
+        out = relay.succeed("journalctl -u tor-antidos-lists.service -o cat")
+        assert "authorities-v4: Updated" in out and " h " in out, out
+        assert "older than" not in out, out
+
+    with subtest("a list older than warnAfterHours is reported at warning level"):
+        publish("authorities-v4", "10.1.0.1\n10.1.0.2\n10.1.0.3\n10.1.0.4\n10.1.0.5\n10.1.0.6\n", when="8 hours ago")
+        relay.succeed("systemctl start tor-antidos-lists.service")
+        warn = relay.succeed("journalctl -u tor-antidos-lists.service -p warning -o cat")
+        assert "authorities-v4: Updated" in warn and "older than 6 h" in warn, warn
+
+    with subtest("a list without a readable Updated line says so instead of guessing"):
+        relay.succeed("printf 'Updated:\nx\n----\n10.1.0.1\n10.1.0.2\n10.1.0.3\n10.1.0.4\n10.1.0.5\n10.1.0.6\n' > /run/relay-lists/authorities-v4.txt")
+        relay.succeed("systemctl start tor-antidos-lists.service")
+        warn = relay.succeed("journalctl -u tor-antidos-lists.service -p warning -o cat")
+        assert "authorities-v4: no readable Updated line" in warn, warn
 
     with subtest("a list that is too short leaves the set as it was"):
         publish("authorities-v4", "10.9.9.9\n")
